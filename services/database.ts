@@ -115,6 +115,19 @@ async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
   return (await response.json()) as T;
 }
 
+function mergeAtletasPreservingLocal(local: Atleta[], remote: Atleta[]): Atleta[] {
+  const merged = [...local];
+  const existingIds = new Set(local.map((item) => item.id));
+
+  for (const item of remote) {
+    if (!existingIds.has(item.id)) {
+      merged.push(item);
+    }
+  }
+
+  return merged;
+}
+
 async function syncConfigFromApi(): Promise<void> {
   if (!useSqliteApi) return;
 
@@ -198,20 +211,29 @@ export const database = {
   },
 
   getAtletas: async (): Promise<Atleta[]> => {
+    const localAtletas = readLocalAtletas();
+
     if (useSqliteApi) {
       try {
         const atletas = await apiRequest<Atleta[]>('/api/atletas');
-        writeLocalAtletas(atletas);
-        return atletas;
+        const merged = mergeAtletasPreservingLocal(localAtletas, atletas);
+        writeLocalAtletas(merged);
+        return merged;
       } catch (error) {
         console.warn('Falha ao carregar atletas da API. Usando local.', error);
       }
     }
 
-    return readLocalAtletas();
+    return localAtletas;
   },
 
   getAtletaById: async (id: string): Promise<Atleta | null> => {
+    const localAtleta = readLocalAtletas().find((item) => item.id === id) || null;
+
+    if (localAtleta) {
+      return localAtleta;
+    }
+
     if (useSqliteApi) {
       try {
         return await apiRequest<Atleta>(`/api/atletas/${id}`);
@@ -220,8 +242,7 @@ export const database = {
       }
     }
 
-    const atletas = readLocalAtletas();
-    return atletas.find((item) => item.id === id) || null;
+    return null;
   },
 
   saveAtleta: async (atleta: Atleta): Promise<void> => {
