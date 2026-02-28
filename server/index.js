@@ -24,6 +24,10 @@ function nowIso() {
   return new Date().toISOString();
 }
 
+function normalizeIdentifier(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
 function createSession(userId) {
   const token = randomBytes(32).toString('hex');
   const createdAt = nowIso();
@@ -134,9 +138,10 @@ app.post('/api/auth/login', (req, res) => {
     return;
   }
 
+  const normalizedIdentifier = normalizeIdentifier(identifier);
   const user = db
-    .prepare('SELECT * FROM users WHERE email = ? LIMIT 1')
-    .get(String(identifier).trim());
+    .prepare('SELECT * FROM users WHERE lower(email) = ? LIMIT 1')
+    .get(normalizedIdentifier);
 
   if (!user || !verifyPassword(String(password), user.password_hash)) {
     res.status(401).json({ message: 'Credenciais invalidas' });
@@ -148,47 +153,14 @@ app.post('/api/auth/login', (req, res) => {
 });
 
 app.post('/api/auth/register', (req, res) => {
-  const { nome, email, password, role } = req.body || {};
+  const { nome, email, password } = req.body || {};
   if (!nome || !email || !password) {
     res.status(400).json({ message: 'Nome, email e senha sao obrigatorios' });
     return;
   }
 
-  const userCount = db.prepare('SELECT COUNT(*) as total FROM users').get();
-  const creatingFirstUser = (userCount?.total || 0) === 0;
-
-  if (!creatingFirstUser) {
-    requireAuth(req, res, () => {
-      requireAdmin(req, res, () => {
-        const exists = db.prepare('SELECT id FROM users WHERE email = ? LIMIT 1').get(String(email).trim());
-        if (exists) {
-          res.status(409).json({ message: 'Email ja cadastrado' });
-          return;
-        }
-
-        const now = nowIso();
-        const userId = `usr_${randomBytes(6).toString('hex')}`;
-        db.prepare(
-          `INSERT INTO users (id, nome, email, role, password_hash, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?)`
-        ).run(
-          userId,
-          String(nome).trim(),
-          String(email).trim(),
-          role || 'VISUALIZADOR',
-          hashPassword(String(password)),
-          now,
-          now
-        );
-
-        const created = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
-        res.status(201).json({ user: userResponse(created) });
-      });
-    });
-    return;
-  }
-
-  const exists = db.prepare('SELECT id FROM users WHERE email = ? LIMIT 1').get(String(email).trim());
+  const normalizedEmail = normalizeIdentifier(email);
+  const exists = db.prepare('SELECT id FROM users WHERE lower(email) = ? LIMIT 1').get(normalizedEmail);
   if (exists) {
     res.status(409).json({ message: 'Email ja cadastrado' });
     return;
@@ -202,8 +174,8 @@ app.post('/api/auth/register', (req, res) => {
   ).run(
     userId,
     String(nome).trim(),
-    String(email).trim(),
-    'ADMIN',
+    normalizedEmail,
+    'VISUALIZADOR',
     hashPassword(String(password)),
     now,
     now

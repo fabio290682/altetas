@@ -68,11 +68,11 @@ export function verifyPassword(password, storedHash) {
 
 function ensureDefaultAdmin() {
   const now = new Date().toISOString();
-  const adminEmail = process.env.ADMIN_DEFAULT_EMAIL || 'admin';
+  const adminEmail = String(process.env.ADMIN_DEFAULT_EMAIL || 'admin').trim().toLowerCase();
   const adminPassword = process.env.ADMIN_DEFAULT_PASSWORD || 'estrelas2026';
   const adminName = process.env.ADMIN_DEFAULT_NAME || 'Administrador';
 
-  const existing = db.prepare('SELECT id FROM users WHERE email = ? LIMIT 1').get(adminEmail);
+  const existing = db.prepare('SELECT id FROM users WHERE lower(email) = ? LIMIT 1').get(adminEmail);
   if (existing) {
     db.prepare(
       `UPDATE users
