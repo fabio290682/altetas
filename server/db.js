@@ -66,24 +66,25 @@ export function verifyPassword(password, storedHash) {
 }
 
 function ensureDefaultAdmin() {
-  const row = db.prepare('SELECT COUNT(*) as total FROM users').get();
-  if ((row?.total || 0) > 0) return;
-
   const now = new Date().toISOString();
-  const defaultUser = {
-    id: `usr_${randomBytes(6).toString('hex')}`,
-    nome: process.env.ADMIN_DEFAULT_NAME || 'Administrador',
-    email: process.env.ADMIN_DEFAULT_EMAIL || 'admin',
-    role: 'ADMIN',
-    password_hash: hashPassword(process.env.ADMIN_DEFAULT_PASSWORD || 'estrelas2026'),
-    created_at: now,
-    updated_at: now
-  };
+  const adminEmail = process.env.ADMIN_DEFAULT_EMAIL || 'admin';
+  const adminPassword = process.env.ADMIN_DEFAULT_PASSWORD || 'estrelas2026';
+  const adminName = process.env.ADMIN_DEFAULT_NAME || 'Administrador';
+
+  const existing = db.prepare('SELECT id FROM users WHERE email = ? LIMIT 1').get(adminEmail);
+  if (existing) {
+    db.prepare(
+      `UPDATE users
+       SET nome = ?, role = 'ADMIN', password_hash = ?, updated_at = ?
+       WHERE id = ?`
+    ).run(adminName, hashPassword(adminPassword), now, existing.id);
+    return;
+  }
 
   db.prepare(
     `INSERT INTO users (id, nome, email, role, password_hash, created_at, updated_at)
-     VALUES (@id, @nome, @email, @role, @password_hash, @created_at, @updated_at)`
-  ).run(defaultUser);
+     VALUES (?, ?, ?, 'ADMIN', ?, ?, ?)`
+  ).run(`usr_${randomBytes(6).toString('hex')}`, adminName, adminEmail, hashPassword(adminPassword), now, now);
 }
 
 ensureDefaultAdmin();
