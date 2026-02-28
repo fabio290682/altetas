@@ -19,6 +19,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [appConfig, setAppConfig] = useState<AppConfig>(database.getAppConfig());
+  const [apiOnline, setApiOnline] = useState<boolean>(true);
 
   const isAuthenticated = database.isAuthenticated();
   const currentUser = database.getCurrentUser();
@@ -30,6 +31,22 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     };
     window.addEventListener('appConfigUpdated', handleUpdate);
     return () => window.removeEventListener('appConfigUpdated', handleUpdate);
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    const check = async () => {
+      const ok = await database.getApiStatus();
+      if (mounted) setApiOnline(ok);
+    };
+    void check();
+    const timer = window.setInterval(() => {
+      void check();
+    }, 20000);
+    return () => {
+      mounted = false;
+      window.clearInterval(timer);
+    };
   }, []);
 
   if (!isAuthenticated && location.pathname !== '/login') {
@@ -126,6 +143,16 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         )}
 
         <div className="p-4 md:p-10 max-w-7xl mx-auto">
+          <div className="mb-4 flex justify-end">
+            <span
+              className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                apiOnline ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-red-100 text-red-700 border border-red-200'
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full ${apiOnline ? 'bg-green-500' : 'bg-red-500'}`}></span>
+              API SQLite {apiOnline ? 'online' : 'offline'}
+            </span>
+          </div>
           {children}
           <p className="mt-8 text-center text-[10px] font-bold uppercase tracking-[0.15em] text-gray-400">Desenvolvido por 3Brasil</p>
         </div>

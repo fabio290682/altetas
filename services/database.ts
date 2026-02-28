@@ -264,6 +264,16 @@ export const database = {
 
   setUserRole: (_role: UserRole) => {
     // Deprecated: role now managed by backend user records.
+  },
+
+  getApiStatus: async (): Promise<boolean> => {
+    if (!useSqliteApi) return true;
+    try {
+      const result = await apiRequest<{ ok: boolean }>('/api/health');
+      return !!result?.ok;
+    } catch {
+      return false;
+    }
   }
 };
 

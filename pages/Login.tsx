@@ -9,8 +9,25 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [apiOnline, setApiOnline] = useState<boolean>(true);
   const navigate = useNavigate();
   const config = database.getAppConfig();
+
+  React.useEffect(() => {
+    let mounted = true;
+    const check = async () => {
+      const ok = await database.getApiStatus();
+      if (mounted) setApiOnline(ok);
+    };
+    void check();
+    const timer = window.setInterval(() => {
+      void check();
+    }, 20000);
+    return () => {
+      mounted = false;
+      window.clearInterval(timer);
+    };
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +65,16 @@ const Login: React.FC = () => {
       <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#c5a059]/5 rounded-full blur-[120px]"></div>
 
       <div className="max-w-md w-full animate-fade-in relative z-10">
+        <div className="mb-3 flex justify-center">
+          <span
+            className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+              apiOnline ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-red-100 text-red-700 border border-red-200'
+            }`}
+          >
+            <span className={`w-2 h-2 rounded-full ${apiOnline ? 'bg-green-500' : 'bg-red-500'}`}></span>
+            API SQLite {apiOnline ? 'online' : 'offline'}
+          </span>
+        </div>
         <div className="bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/20">
           <div className="bg-[#0a1d37] p-10 text-center relative border-b-4 border-[#c5a059]">
             <div className="w-24 h-24 bg-white rounded-full mx-auto flex items-center justify-center shadow-lg border-2 border-[#c5a059] mb-4 overflow-hidden">
