@@ -1,52 +1,58 @@
 ﻿# Estrelas do Norte - Gestao de Atletas
 
-Aplicacao React + Vite para cadastro, edicao e listagem de atletas.
+Aplicacao React + API Node com banco SQLite.
 
-## 1. Requisitos
+## Rodar localmente
 
-- Node.js 20+
-- Conta Firebase (para banco em producao)
-
-## 2. Instalar dependencias
+1. Instale dependencias:
 
 ```bash
 npm install
 ```
 
-## 3. Configurar ambiente
-
-Copie `.env.example` para `.env.local` e preencha as variaveis `VITE_FIREBASE_*` do seu projeto Firebase.
-
-```bash
-cp .env.example .env.local
-```
-
-Se as variaveis do Firebase estiverem vazias, o sistema continua funcionando em modo local (`localStorage`).
-
-## 4. Criar banco no Firebase Console
-
-1. Acesse Firebase Console > seu projeto.
-2. Ative **Firestore Database** em modo producao.
-3. Ative **Storage**.
-4. Em **Authentication > Sign-in method**, habilite **Anonymous**.
-5. Em **Project Settings > General > Your apps (Web)** copie as chaves para `.env.local`.
-6. (Opcional, recomendado) Publique as regras de:
-   - `firebase/firestore.rules`
-   - `firebase/storage.rules`
-
-## 5. Rodar localmente
+2. Inicie frontend + API SQLite:
 
 ```bash
 npm run dev
 ```
 
-## 6. Build de producao
+3. Acesse:
+
+- Frontend: `http://127.0.0.1:3000/#/login`
+- API health: `http://127.0.0.1:4000/api/health`
+
+Login demo:
+
+- usuario: `admin`
+- senha: `estrelas2026`
+
+## Banco SQLite
+
+- Arquivo local: `data/app.db`
+- Em producao (Render): caminho configurado por `SQLITE_DB_PATH`
+
+## Build
 
 ```bash
 npm run build
 ```
 
-## Observacoes
+## Deploy com SQLite persistente (Render)
 
-- O servico `services/database.ts` usa Firestore/Storage automaticamente quando o Firebase esta configurado.
-- Sem Firebase configurado, o app faz fallback automatico para `localStorage`.
+O arquivo `render.yaml` ja esta pronto.
+
+1. Suba este projeto para um repositorio GitHub.
+2. Abra no navegador:
+
+```text
+https://dashboard.render.com/blueprint/new?repo=SEU_REPO_GITHUB
+```
+
+3. Clique em `Apply`.
+
+Render vai criar:
+
+- 1 Web Service Node
+- 1 disco persistente de 1GB para o SQLite
+
+Depois do deploy, os cadastros ficam salvos no SQLite persistente.

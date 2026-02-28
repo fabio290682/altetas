@@ -1,0 +1,16 @@
+﻿services:
+  - type: web
+    name: altetas-app
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SQLITE_DB_PATH
+        value: /var/data/app.db
+    disk:
+      name: sqlite-data
+      mountPath: /var/data
+      sizeGB: 1
