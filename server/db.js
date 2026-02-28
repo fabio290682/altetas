@@ -4,7 +4,8 @@ import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import Database from 'better-sqlite3';
 
 const configuredPath = process.env.SQLITE_DB_PATH;
-const fallbackPath = path.resolve(process.cwd(), 'data', 'app.db');
+const isVercel = !!process.env.VERCEL;
+const fallbackPath = isVercel ? '/tmp/app.db' : path.resolve(process.cwd(), 'data', 'app.db');
 const dbPath = configuredPath ? path.resolve(configuredPath) : fallbackPath;
 const dbDir = path.dirname(dbPath);
 
