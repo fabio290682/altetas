@@ -1,0 +1,8 @@
+
+{
+  "name": "AthletePro - Sistema de Cadastro de Atletas",
+  "description": "Uma plataforma profissional para gestão de atletas de projetos sociais, incluindo cadastro em 5 etapas, validação de documentos, upload de fotos e análise de perfil via IA.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
