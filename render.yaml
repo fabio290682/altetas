@@ -3,6 +3,7 @@
     name: altetas-app
     runtime: node
     plan: free
+    healthCheckPath: /api/health
     buildCommand: npm ci && npm run build
     startCommand: npm run start
     envVars:
