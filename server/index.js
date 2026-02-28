@@ -15,6 +15,7 @@ const distDir = path.join(rootDir, 'dist');
 
 const DEFAULT_CONFIG = { logoURL: '', appName: 'Estrelas do Norte' };
 const SESSION_DAYS = 7;
+const isServerless = !!process.env.VERCEL;
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
@@ -294,7 +295,7 @@ app.put('/api/config', requireAuth, (req, res) => {
   res.json(updated);
 });
 
-if (process.env.NODE_ENV === 'production') {
+if (process.env.NODE_ENV === 'production' && !isServerless) {
   app.use(express.static(distDir));
   app.get('*', (_req, res) => {
     res.sendFile(path.join(distDir, 'index.html'));
@@ -303,7 +304,6 @@ if (process.env.NODE_ENV === 'production') {
 
 export default app;
 
-const isServerless = !!process.env.VERCEL;
 if (!isServerless) {
   const port = Number(process.env.PORT || 4000);
   app.listen(port, () => {
